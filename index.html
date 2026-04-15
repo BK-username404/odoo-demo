@@ -1,184 +1,72 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Odoo Nested Search Demo</title>
-
-<style>
-body { font-family: Arial; margin: 20px; }
-
-.search-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  border: 1px solid #ccc;
-  padding: 8px;
-  border-radius: 8px;
-  align-items: center;
-}
-
-.chip {
-  background: #e8f0ff;
-  padding: 4px 8px;
-  border-radius: 15px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.chip input {
-  border: none;
-  background: transparent;
-  outline: none;
-  width: 90px;
-}
-
-.item {
-  background: #f5f5f5;
-  margin: 5px 0;
-  padding: 6px;
-  border-radius: 6px;
-}
-
-.group {
-  margin-top: 15px;
-  padding: 10px;
-  border-left: 3px solid #4a7cff;
-}
-
-.sub {
-  margin-left: 15px;
-  font-size: 14px;
-}
-
-.price {
-  float: right;
-  font-weight: bold;
-}
-
-button {
-  cursor: pointer;
-}
-</style>
-</head>
-
-<body>
-
-<h2>🔎 Odoo-like Nested Search</h2>
-
-<div class="search-bar" id="searchBar">
-  <button onclick="addFilter()">+ пошук</button>
-</div>
-
+<div id="searchBar"></div>
 <div id="results"></div>
 
 <script>
 const data = [
-  {
-    category:"🍎 Яблука",
-    items:[
-      {name:"Голден", price:20},
-      {name:"Фуджі", price:25},
-      {name:"Симиренка", price:19}
-    ]
-  },
-  {
-    category:"🍐 Груші",
-    items:[
-      {name:"Конференція", price:22},
-      {name:"Вільямс", price:18},
-      {name:"Бере Боск", price:24}
-    ]
-  },
-  {
-    category:"🥕 Овочі",
-    items:[
-      {name:"Морква", price:8},
-      {name:"Буряк", price:9},
-      {name:"Картопля", price:12}
-    ]
-  }
+  {name:"🍎 Яблука", category:"Фрукти", price:10},
+  {name:"🍐 Груші", category:"Фрукти", price:15},
+  {name:"🥕 Морква", category:"Овочі", price:8},
+  {name:"🥦 Броколі", category:"Овочі", price:12}
 ];
 
-let filters = [{value:""}];
+let domain = [
+  {field:"name", operator:"contains", value:""}
+];
 
-function addFilter() {
-  filters.push({value:""});
+function add(field) {
+  domain.push({field, operator:"contains", value:""});
   render();
 }
 
-function removeFilter(i) {
-  filters.splice(i,1);
+function remove(i) {
+  domain.splice(i,1);
   render();
 }
 
-function updateFilter(i, val) {
-  filters[i].value = val;
+function update(i, value) {
+  domain[i].value = value;
   render();
 }
 
 function match(item) {
-  return filters.every(f => {
-    if (!f.value) return true;
+  return domain.every(d => {
+    if (!d.value) return true;
 
-    let v = f.value.toLowerCase();
+    if (d.field === "name")
+      return item.name.toLowerCase().includes(d.value.toLowerCase());
 
-    return item.category.toLowerCase().includes(v) ||
-           item.items.some(i =>
-             i.name.toLowerCase().includes(v)
-           );
+    if (d.field === "category")
+      return item.category.toLowerCase().includes(d.value.toLowerCase());
+
+    if (d.field === "price")
+      return item.price >= Number(d.value);
+
+    return true;
   });
 }
 
 function render() {
-
-  // search bar
+  // chips UI
   document.getElementById("searchBar").innerHTML = `
-    <button onclick="addFilter()">+ пошук</button>
-  ` + filters.map((f,i)=>`
-    <div class="chip">
-      🔎
-      <input value="${f.value}" oninput="updateFilter(${i},this.value)">
-      <button onclick="removeFilter(${i})">✕</button>
-    </div>
-  `).join("");
+    <button onclick="add('name')">+ Name</button>
+    <button onclick="add('category')">+ Category</button>
+    <button onclick="add('price')">+ Price ≥</button>
+    ` + domain.map((d,i)=>`
+      <span style="border:1px solid #ccc;padding:4px;margin:3px;display:inline-block">
+        ${d.field}:
+        <input value="${d.value}" oninput="update(${i},this.value)" style="width:80px">
+        <button onclick="remove(${i})">✕</button>
+      </span>
+    `).join("");
 
   // results
-  let html = "";
-
-  data.forEach(group => {
-
-    let filteredItems = group.items.filter(i => {
-      return filters.every(f => {
-        if (!f.value) return true;
-        let v = f.value.toLowerCase();
-        return group.category.toLowerCase().includes(v) ||
-               i.name.toLowerCase().includes(v);
-      });
-    });
-
-    if (filteredItems.length === 0) return;
-
-    html += `<div class="group">`;
-    html += `<h3>${group.category}</h3>`;
-
-    filteredItems.forEach(i => {
-      html += `
-        <div class="sub">
-          ${i.name}
-          <span class="price">${i.price} грн</span>
-        </div>
-      `;
-    });
-
-    html += `</div>`;
-  });
-
-  document.getElementById("results").innerHTML = html;
+  document.getElementById("results").innerHTML =
+    data.filter(match).map(i=>`
+      <div>
+        ${i.name} — ${i.category} — ${i.price}₴
+      </div>
+    `).join("");
 }
 
 render();
 </script>
-
-</body>
-</html>
