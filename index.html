@@ -1,0 +1,63 @@
+<div>
+  <h3>Демо пошуку</h3>
+
+  <button onclick="filterCategory('Фрукти')">Фрукти</button>
+  <button onclick="filterPrice()">Ціна > 10</button>
+  <button onclick="groupByCategory()">Групувати за категорією</button>
+  <button onclick="reset()">Скинути</button>
+
+  <ul id="list"></ul>
+</div>
+
+<script>
+const data = [
+  {name: '🍎 Яблука', category: 'Фрукти', price: 10},
+  {name: '🍐 Груші', category: 'Фрукти', price: 15},
+  {name: '🥕 Морква', category: 'Овочі', price: 8}
+];
+
+let current = [...data];
+
+function render(items) {
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+  items.forEach(i => {
+    list.innerHTML += `<li>${i.name} — ${i.category} — ${i.price}</li>`;
+  });
+}
+
+function filterCategory(cat) {
+  current = data.filter(i => i.category === cat);
+  render(current);
+}
+
+function filterPrice() {
+  current = data.filter(i => i.price > 10);
+  render(current);
+}
+
+function groupByCategory() {
+  const grouped = {};
+  current.forEach(i => {
+    if (!grouped[i.category]) grouped[i.category] = [];
+    grouped[i.category].push(i);
+  });
+
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+
+  for (let key in grouped) {
+    list.innerHTML += `<li><b>${key}</b></li>`;
+    grouped[key].forEach(i => {
+      list.innerHTML += `<li>— ${i.name}</li>`;
+    });
+  }
+}
+
+function reset() {
+  current = [...data];
+  render(current);
+}
+
+render(current);
+</script>
