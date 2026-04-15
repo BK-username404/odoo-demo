@@ -1,72 +1,383 @@
-<div id="searchBar"></div>
-<div id="results"></div>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.o-page{padding:1.5rem;max-width:900px}
+.o-header{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem}
+.o-breadcrumb{font-size:13px;color:var(--color-text-secondary)}
+.o-title{font-size:18px;font-weight:500;color:var(--color-text-primary)}
+.o-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.o-search-wrap{flex:1;min-width:240px;position:relative}
+.o-search-box{display:flex;flex-wrap:wrap;align-items:center;gap:4px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:5px 8px;background:var(--color-background-primary);min-height:36px;cursor:text;transition:border-color .15s}
+.o-search-box:focus-within{border-color:#714b67;box-shadow:0 0 0 2px rgba(113,75,103,0.15)}
+.o-facet{display:inline-flex;align-items:center;gap:4px;background:#f0e8ed;border:0.5px solid #c9afc0;border-radius:4px;padding:2px 6px;font-size:12px;color:#4a2545;max-width:180px}
+.o-facet .f-label{font-weight:500;color:#4a2545;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.o-facet .f-val{color:#714b67;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.o-facet .f-rm{background:none;border:none;cursor:pointer;padding:0 1px;font-size:12px;color:#4a2545;line-height:1;opacity:.6}
+.o-facet .f-rm:hover{opacity:1}
+.o-search-input{border:none;outline:none;background:transparent;font-size:13px;color:var(--color-text-primary);min-width:120px;flex:1}
+.o-search-input::placeholder{color:var(--color-text-tertiary)}
+.o-search-icon{color:var(--color-text-tertiary);font-size:14px;padding-right:2px}
+.o-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:100;overflow:hidden;display:none}
+.o-dropdown.open{display:block}
+.o-dd-section{padding:4px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.o-dd-section:last-child{border-bottom:none}
+.o-dd-label{font-size:10px;font-weight:500;letter-spacing:.5px;color:var(--color-text-tertiary);padding:6px 12px 2px;text-transform:uppercase}
+.o-dd-item{padding:7px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--color-text-primary)}
+.o-dd-item:hover,.o-dd-item.active{background:var(--color-background-secondary)}
+.o-dd-item .dd-key{color:var(--color-text-secondary);min-width:70px;font-size:12px}
+.o-dd-item .dd-val{color:#714b67;font-weight:500}
+.o-dd-item .dd-arrow{margin-left:auto;color:var(--color-text-tertiary);font-size:11px}
+.o-btn-group{display:flex;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);overflow:hidden}
+.o-btn{padding:6px 12px;font-size:13px;background:var(--color-background-primary);border:none;cursor:pointer;color:var(--color-text-secondary);transition:background .15s}
+.o-btn:hover{background:var(--color-background-secondary)}
+.o-btn.active{background:#714b67;color:#fff}
+.o-btn+.o-btn{border-left:0.5px solid var(--color-border-secondary)}
+.o-list{border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);overflow:hidden;background:var(--color-background-primary)}
+.o-list-header{display:grid;grid-template-columns:2fr 1fr 1fr 80px;padding:8px 16px;background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px;font-weight:500;color:var(--color-text-secondary)}
+.o-list-row{display:grid;grid-template-columns:2fr 1fr 1fr 80px;padding:9px 16px;border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px;align-items:center;cursor:pointer;transition:background .1s}
+.o-list-row:last-child{border-bottom:none}
+.o-list-row:hover{background:var(--color-background-secondary)}
+.o-badge{display:inline-block;font-size:11px;padding:2px 7px;border-radius:20px;font-weight:500}
+.badge-fruit{background:#e8f5e8;color:#2d7a2d}
+.badge-veg{background:#e8f1fa;color:#1a5f9e}
+.o-empty{padding:3rem;text-align:center;color:var(--color-text-tertiary);font-size:14px}
+.o-count{font-size:13px;color:var(--color-text-secondary);padding:8px 16px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.o-kanban{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.o-kcard{background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:14px;cursor:pointer;transition:border-color .15s}
+.o-kcard:hover{border-color:#714b67}
+.o-kcard .k-cat{font-size:11px;color:var(--color-text-tertiary);margin-bottom:4px}
+.o-kcard .k-name{font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:8px}
+.o-kcard .k-price{font-size:16px;font-weight:500;color:#714b67}
+.hint-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem}
+.hint-card{background:var(--color-background-primary);border-radius:var(--border-radius-lg);max-width:480px;width:100%;overflow:hidden}
+.hint-header{background:#714b67;color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.hint-header h3{font-size:15px;font-weight:500;margin:0}
+.hint-close{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;line-height:1;opacity:.8}
+.hint-close:hover{opacity:1}
+.hint-body{padding:18px}
+.hint-body p{font-size:13px;color:var(--color-text-primary);line-height:1.7;margin-bottom:10px}
+.hint-body p:last-child{margin-bottom:0}
+.hint-body strong{font-weight:500}
+.hint-tag{display:inline-block;background:#f0e8ed;color:#4a2545;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:500;margin:2px}
+.hint-step{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}
+.hint-step-num{width:22px;height:22px;border-radius:50%;background:#714b67;color:#fff;font-size:11px;font-weight:500;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.hint-step p{margin:0;font-size:13px;color:var(--color-text-primary);line-height:1.6}
+.tooltip-btn{width:18px;height:18px;border-radius:50%;background:#e8d8e3;border:none;cursor:pointer;font-size:11px;font-weight:500;color:#4a2545;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;transition:background .15s}
+.tooltip-btn:hover{background:#714b67;color:#fff}
+.o-filters-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.o-filter-btn{padding:4px 10px;font-size:12px;border:0.5px solid var(--color-border-secondary);border-radius:20px;background:var(--color-background-primary);cursor:pointer;color:var(--color-text-secondary);transition:all .15s}
+.o-filter-btn:hover{border-color:#714b67;color:#714b67}
+.o-filter-btn.active{background:#714b67;border-color:#714b67;color:#fff}
+.o-filters-label{font-size:12px;color:var(--color-text-tertiary)}
+</style>
+
+<div class="o-page" id="app">
+  <div class="o-header">
+    <span class="o-breadcrumb">Інвентар /</span>
+    <span class="o-title">Продукти</span>
+    <button class="tooltip-btn" onclick="showHint('what')">?</button>
+  </div>
+
+  <div class="o-toolbar">
+    <div class="o-search-wrap" id="searchWrap">
+      <div class="o-search-box" id="searchBox" onclick="focusInput()">
+        <span class="o-search-icon">&#128269;</span>
+        <div id="facets"></div>
+        <input class="o-search-input" id="mainInput" placeholder="Пошук..." autocomplete="off"
+          oninput="onInput(this.value)" onkeydown="onKey(event)" onfocus="openDropdown()" onblur="closeDropdownDelay()">
+      </div>
+      <div class="o-dropdown" id="dropdown"></div>
+    </div>
+
+    <button class="tooltip-btn" onclick="showHint('search')">?</button>
+
+    <div class="o-btn-group">
+      <button class="o-btn active" id="btnList" onclick="setView('list')">&#9776; Список</button>
+      <button class="o-btn" id="btnKanban" onclick="setView('kanban')">&#9783; Канбан</button>
+    </div>
+  </div>
+
+  <div class="o-filters-bar">
+    <span class="o-filters-label">Фільтри:</span>
+    <button class="o-filter-btn" id="fAll" onclick="setQuickFilter('all')">Всі</button>
+    <button class="o-filter-btn" id="fFruit" onclick="setQuickFilter('fruit')">Фрукти</button>
+    <button class="o-filter-btn" id="fVeg" onclick="setQuickFilter('veg')">Овочі</button>
+    <button class="tooltip-btn" onclick="showHint('filter')">?</button>
+    <span style="margin-left:auto;font-size:12px;color:var(--color-text-tertiary)">Групування:</span>
+    <button class="o-filter-btn" id="gNone" onclick="setGroup('none')">Без груп</button>
+    <button class="o-filter-btn" id="gCat" onclick="setGroup('category')">По категорії</button>
+    <button class="tooltip-btn" onclick="showHint('group')">?</button>
+  </div>
+
+  <div id="results"></div>
+</div>
+
+<div class="hint-overlay" id="hintOverlay" style="display:none" onclick="closeHint(event)">
+  <div class="hint-card" onclick="event.stopPropagation()">
+    <div class="hint-header">
+      <h3 id="hintTitle">Підказка</h3>
+      <button class="hint-close" onclick="closeHint()">&#10005;</button>
+    </div>
+    <div class="hint-body" id="hintBody"></div>
+  </div>
+</div>
 
 <script>
 const data = [
-  {name:"🍎 Яблука", category:"Фрукти", price:10},
-  {name:"🍐 Груші", category:"Фрукти", price:15},
-  {name:"🥕 Морква", category:"Овочі", price:8},
-  {name:"🥦 Броколі", category:"Овочі", price:12}
+  {category:"Яблука",type:"fruit",items:[
+    {name:"Голден",price:20},{name:"Фуджі",price:25},{name:"Симиренка",price:19}
+  ]},
+  {category:"Груші",type:"fruit",items:[
+    {name:"Конференція",price:22},{name:"Вільямс",price:18},{name:"Бере Боск",price:24}
+  ]},
+  {category:"Овочі",type:"veg",items:[
+    {name:"Морква",price:8},{name:"Буряк",price:9},{name:"Картопля",price:12}
+  ]}
 ];
 
-let domain = [
-  {field:"name", operator:"contains", value:""}
-];
+const hints = {
+  what:{title:"Що це за інтерфейс?",body:`
+    <div class="hint-step"><div class="hint-step-num">1</div><p>Це <strong>демонстрація пошуку Odoo 19</strong> — спрощена версія того, як виглядає список продуктів у модулі Inventory або Sales.</p></div>
+    <div class="hint-step"><div class="hint-step-num">2</div><p>У реальному Odoo такий список міг би містити сотні товарів з цінами, залишками, постачальниками тощо.</p></div>
+    <div class="hint-step"><div class="hint-step-num">3</div><p>Спробуй всі елементи вгорі, щоб зрозуміти як Odoo організовує пошук та фільтрацію.</p></div>
+  `},
+  search:{title:"Як працює пошуковий рядок?",body:`
+    <p>Пошуковий рядок Odoo — це потужний інструмент. Ось його головні принципи:</p>
+    <div class="hint-step"><div class="hint-step-num">1</div><p><strong>Введи текст</strong> і натисни Enter — з'явиться <em>фасетка</em> (кольоровий тег). Можна додати кілька.</p></div>
+    <div class="hint-step"><div class="hint-step-num">2</div><p><strong>Кілька фасеток = AND-логіка</strong>: запис показується лише якщо відповідає <em>всім</em> фасеткам одночасно.</p></div>
+    <div class="hint-step"><div class="hint-step-num">3</div><p>Фасетку можна <strong>видалити</strong> кнопкою × — і результати одразу оновляться.</p></div>
+    <div class="hint-step"><div class="hint-step-num">4</div><p>У реальному Odoo з'являється <strong>випадаюче меню</strong> зі списком полів для пошуку (назва, категорія, постачальник тощо) — спробуй ввести щось!</p></div>
+    <p style="margin-top:10px">Наприклад: спробуй <span class="hint-tag">а</span> або <span class="hint-tag">к</span></p>
+  `},
+  filter:{title:"Швидкі фільтри",body:`
+    <p>Кнопки <strong>Фрукти</strong> та <strong>Овочі</strong> — це аналог вбудованих <em>Filters</em> в Odoo.</p>
+    <div class="hint-step"><div class="hint-step-num">1</div><p>У реальному Odoo ці фільтри задаються розробником або адміном у <strong>xml-views</strong> та <strong>search views</strong>.</p></div>
+    <div class="hint-step"><div class="hint-step-num">2</div><p>Фільтри можна комбінувати з текстовим пошуком — вони працюють разом по AND-логіці.</p></div>
+    <div class="hint-step"><div class="hint-step-num">3</div><p>Натисни <span class="hint-tag">Фрукти</span>, а потім введи <span class="hint-tag">а</span> в пошуку — побачиш перетин.</p></div>
+  `},
+  group:{title:"Групування записів",body:`
+    <p><strong>Group By</strong> — одна з ключових функцій Odoo для аналізу даних.</p>
+    <div class="hint-step"><div class="hint-step-num">1</div><p>Натисни <span class="hint-tag">По категорії</span> — записи згрупуються з заголовком категорії та лічильником.</p></div>
+    <div class="hint-step"><div class="hint-step-num">2</div><p>У реальному Odoo можна групувати по будь-якому полі: дата, відповідальний, статус тощо.</p></div>
+    <div class="hint-step"><div class="hint-step-num">3</div><p>Групування + фільтр + пошук — це стандартний спосіб роботи з великими списками в Odoo.</p></div>
+  `}
+};
 
-function add(field) {
-  domain.push({field, operator:"contains", value:""});
-  render();
+let facets = [];
+let query = "";
+let currentView = "list";
+let quickFilter = "all";
+let groupMode = "none";
+let ddActive = -1;
+let ddItems = [];
+let closeTimer = null;
+
+function focusInput(){document.getElementById("mainInput").focus()}
+
+function onInput(val){
+  query = val;
+  buildDropdown(val);
+  if(!val){document.getElementById("dropdown").classList.remove("open")}
 }
 
-function remove(i) {
-  domain.splice(i,1);
-  render();
-}
-
-function update(i, value) {
-  domain[i].value = value;
-  render();
-}
-
-function match(item) {
-  return domain.every(d => {
-    if (!d.value) return true;
-
-    if (d.field === "name")
-      return item.name.toLowerCase().includes(d.value.toLowerCase());
-
-    if (d.field === "category")
-      return item.category.toLowerCase().includes(d.value.toLowerCase());
-
-    if (d.field === "price")
-      return item.price >= Number(d.value);
-
-    return true;
+function buildDropdown(val){
+  const dd = document.getElementById("dropdown");
+  if(!val){dd.classList.remove("open");ddItems=[];return}
+  ddItems = [];
+  let html = "";
+  const v = val.toLowerCase();
+  const nameMatches = [];
+  const catMatches = [];
+  data.forEach(g=>{
+    if(g.category.toLowerCase().includes(v)) catMatches.push({type:"cat",label:"Категорія",val:g.category});
+    g.items.forEach(i=>{if(i.name.toLowerCase().includes(v)) nameMatches.push({type:"name",label:"Назва",val:i.name})});
   });
+  const unique = {};
+  [...nameMatches,...catMatches].forEach(x=>{if(!unique[x.val]){unique[x.val]=x;ddItems.push(x)}});
+  ddItems.push({type:"search",label:"Пошук",val:val});
+
+  if(ddItems.length){
+    const byType = {};
+    ddItems.forEach(x=>{(byType[x.label]=byType[x.label]||[]).push(x)});
+    Object.keys(byType).forEach(lbl=>{
+      html+=`<div class="o-dd-section"><div class="o-dd-label">${lbl}</div>`;
+      byType[lbl].forEach((x,idx)=>{
+        const i = ddItems.indexOf(x);
+        html+=`<div class="o-dd-item" id="dd${i}" onclick="pickDD(${i})"><span class="dd-val">${x.val}</span><span class="dd-arrow">&#8629;</span></div>`;
+      });
+      html+="</div>";
+    });
+    dd.innerHTML = html;
+    dd.classList.add("open");
+    ddActive = -1;
+  } else {
+    dd.classList.remove("open");
+  }
 }
 
-function render() {
-  // chips UI
-  document.getElementById("searchBar").innerHTML = `
-    <button onclick="add('name')">+ Name</button>
-    <button onclick="add('category')">+ Category</button>
-    <button onclick="add('price')">+ Price ≥</button>
-    ` + domain.map((d,i)=>`
-      <span style="border:1px solid #ccc;padding:4px;margin:3px;display:inline-block">
-        ${d.field}:
-        <input value="${d.value}" oninput="update(${i},this.value)" style="width:80px">
-        <button onclick="remove(${i})">✕</button>
-      </span>
-    `).join("");
-
-  // results
-  document.getElementById("results").innerHTML =
-    data.filter(match).map(i=>`
-      <div>
-        ${i.name} — ${i.category} — ${i.price}₴
-      </div>
-    `).join("");
+function pickDD(i){
+  const x = ddItems[i];
+  if(x){
+    facets.push({label:x.label==="Пошук"?"Текст":x.label,val:x.val});
+    document.getElementById("mainInput").value="";
+    query="";
+    document.getElementById("dropdown").classList.remove("open");
+    ddItems=[];
+    renderFacets();
+    renderResults();
+  }
 }
 
-render();
+function onKey(e){
+  const dd = document.getElementById("dropdown");
+  if(e.key==="ArrowDown"){ddActive=Math.min(ddActive+1,ddItems.length-1);highlightDD();e.preventDefault()}
+  else if(e.key==="ArrowUp"){ddActive=Math.max(ddActive-1,0);highlightDD();e.preventDefault()}
+  else if(e.key==="Enter"){
+    if(ddActive>=0){pickDD(ddActive)}
+    else if(query){facets.push({label:"Текст",val:query});document.getElementById("mainInput").value="";query="";dd.classList.remove("open");ddItems=[];renderFacets();renderResults()}
+  }
+  else if(e.key==="Backspace"&&!query&&facets.length){facets.pop();renderFacets();renderResults()}
+  else if(e.key==="Escape"){dd.classList.remove("open")}
+}
+
+function highlightDD(){
+  document.querySelectorAll(".o-dd-item").forEach((el,i)=>{el.classList.toggle("active",i===ddActive)});
+}
+
+function openDropdown(){
+  if(query) buildDropdown(query);
+}
+
+function closeDropdownDelay(){
+  closeTimer = setTimeout(()=>{
+    document.getElementById("dropdown").classList.remove("open");
+  },200);
+}
+
+function removeFacet(i){
+  facets.splice(i,1);
+  renderFacets();
+  renderResults();
+}
+
+function renderFacets(){
+  const el = document.getElementById("facets");
+  el.innerHTML = facets.map((f,i)=>`
+    <div class="o-facet" title="${f.label}: ${f.val}">
+      <span class="f-key" style="font-size:10px;color:#714b67;margin-right:2px">${f.label}:</span>
+      <span class="f-val">${f.val}</span>
+      <button class="f-rm" onclick="removeFacet(${i})">&#10005;</button>
+    </div>
+  `).join("");
+}
+
+function setView(v){
+  currentView=v;
+  document.getElementById("btnList").classList.toggle("active",v==="list");
+  document.getElementById("btnKanban").classList.toggle("active",v==="kanban");
+  renderResults();
+}
+
+function setQuickFilter(f){
+  quickFilter=f;
+  ["fAll","fFruit","fVeg"].forEach(id=>document.getElementById(id).classList.remove("active"));
+  document.getElementById(f==="all"?"fAll":f==="fruit"?"fFruit":"fVeg").classList.add("active");
+  renderResults();
+}
+
+function setGroup(g){
+  groupMode=g;
+  document.getElementById("gNone").classList.toggle("active",g==="none");
+  document.getElementById("gCat").classList.toggle("active",g==="category");
+  renderResults();
+}
+
+function getFiltered(){
+  let rows = [];
+  data.forEach(g=>{
+    if(quickFilter==="fruit"&&g.type!=="fruit") return;
+    if(quickFilter==="veg"&&g.type!=="veg") return;
+    g.items.forEach(item=>{
+      const pass = facets.every(f=>{
+        const v = f.val.toLowerCase();
+        return item.name.toLowerCase().includes(v)||g.category.toLowerCase().includes(v);
+      });
+      if(pass) rows.push({...item,category:g.category,type:g.type});
+    });
+  });
+  return rows;
+}
+
+function renderResults(){
+  const rows = getFiltered();
+  const el = document.getElementById("results");
+
+  if(rows.length===0){
+    el.innerHTML=`<div class="o-list"><div class="o-empty">Записів не знайдено</div></div>`;
+    return;
+  }
+
+  if(currentView==="kanban"){
+    el.innerHTML=`<div class="o-kanban">${rows.map(r=>`
+      <div class="o-kcard">
+        <div class="k-cat">${r.category}</div>
+        <div class="k-name">${r.name}</div>
+        <div class="k-price">${r.price} грн</div>
+      </div>`).join("")}</div>`;
+    return;
+  }
+
+  if(groupMode==="category"){
+    const groups = {};
+    rows.forEach(r=>{(groups[r.category]=groups[r.category]||[]).push(r)});
+    let html = "";
+    Object.keys(groups).forEach(cat=>{
+      const grp = groups[cat];
+      html+=`<div class="o-list" style="margin-bottom:12px">
+        <div style="padding:8px 16px;background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px;font-weight:500;color:var(--color-text-secondary);display:flex;align-items:center;gap:8px">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#714b67"></span>
+          ${cat} <span style="font-weight:400;color:var(--color-text-tertiary)">(${grp.length})</span>
+        </div>
+        <div class="o-list-header"><span>Назва</span><span>Категорія</span><span>Тип</span><span style="text-align:right">Ціна</span></div>
+        ${grp.map(r=>`<div class="o-list-row">
+          <span>${r.name}</span>
+          <span style="color:var(--color-text-secondary)">${r.category}</span>
+          <span><span class="o-badge ${r.type==="fruit"?"badge-fruit":"badge-veg"}">${r.type==="fruit"?"Фрукт":"Овоч"}</span></span>
+          <span style="text-align:right;font-weight:500;color:#714b67">${r.price} грн</span>
+        </div>`).join("")}
+      </div>`;
+    });
+    el.innerHTML=html;
+    return;
+  }
+
+  el.innerHTML=`<div class="o-list">
+    <div class="o-count">${rows.length} записів</div>
+    <div class="o-list-header"><span>Назва</span><span>Категорія</span><span>Тип</span><span style="text-align:right">Ціна</span></div>
+    ${rows.map(r=>`<div class="o-list-row">
+      <span>${r.name}</span>
+      <span style="color:var(--color-text-secondary)">${r.category}</span>
+      <span><span class="o-badge ${r.type==="fruit"?"badge-fruit":"badge-veg"}">${r.type==="fruit"?"Фрукт":"Овоч"}</span></span>
+      <span style="text-align:right;font-weight:500;color:#714b67">${r.price} грн</span>
+    </div>`).join("")}
+  </div>`;
+}
+
+function showHint(key){
+  const h = hints[key];
+  document.getElementById("hintTitle").textContent = h.title;
+  document.getElementById("hintBody").innerHTML = h.body;
+  document.getElementById("hintOverlay").style.display = "flex";
+}
+
+function closeHint(e){
+  if(!e||e.target===document.getElementById("hintOverlay"))
+    document.getElementById("hintOverlay").style.display="none";
+}
+
+setQuickFilter("all");
+setGroup("none");
+renderFacets();
+renderResults();
 </script>
