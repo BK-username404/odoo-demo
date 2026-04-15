@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Odoo 19 Search Demo</title>
+  <title>Демо пошуку товарів</title>
   <style>
     :root {
       --bg: #111827;
@@ -166,19 +166,19 @@
       white-space: nowrap;
     }
 
-    .status.done {
+    .status.fruits {
       color: #a7f3d0;
       background: rgba(16, 185, 129, 0.18);
       border-color: rgba(16, 185, 129, 0.45);
     }
 
-    .status.progress {
+    .status.vegetables {
       color: #fde68a;
       background: rgba(245, 158, 11, 0.16);
       border-color: rgba(245, 158, 11, 0.45);
     }
 
-    .status.todo {
+    .status.berries {
       color: #bfdbfe;
       background: rgba(96, 165, 250, 0.16);
       border-color: rgba(96, 165, 250, 0.45);
@@ -202,20 +202,20 @@
   <div class="container">
     <div class="topbar">
       <div class="logo">O</div>
-      <div class="title">Demo: пошук в Odoo 19 стилі</div>
+      <div class="title">Демо: каталог товарів (яблука, груші, овочі)</div>
     </div>
 
     <div class="search-wrap">
-      <input id="searchInput" type="search" placeholder="Пошук: клієнт, менеджер, статус..." />
+      <input id="searchInput" type="search" placeholder="Пошук: яблуко, груша, овочі, сорт..." />
       <button class="chip active" data-filter="all">Всі</button>
-      <button class="chip" data-filter="done">Done</button>
-      <button class="chip" data-filter="progress">In Progress</button>
-      <button class="chip" data-filter="todo">To Do</button>
+      <button class="chip" data-filter="fruits">Фрукти</button>
+      <button class="chip" data-filter="vegetables">Овочі</button>
+      <button class="chip" data-filter="berries">Ягоди</button>
     </div>
 
     <section class="panel">
       <header class="panel-head">
-        <span id="counter">Записів: 0</span>
+        <span id="counter">Товарів: 0</span>
         <span>Статичний файл для GitHub Pages</span>
       </header>
       <ul id="list" class="list"></ul>
@@ -225,18 +225,20 @@
 
   <script>
     const records = [
-      { name: "SO0421 - Agrolife", owner: "Олена", status: "progress", module: "Sales" },
-      { name: "SO0422 - Nova Trade", owner: "Андрій", status: "todo", module: "Sales" },
-      { name: "CRM-151 - Lead Softline", owner: "Марія", status: "done", module: "CRM" },
-      { name: "CRM-152 - Lead SkyNet", owner: "Олексій", status: "progress", module: "CRM" },
-      { name: "PICK-901 - Warehouse A", owner: "Ірина", status: "todo", module: "Inventory" },
-      { name: "INV-777 - Invoice Delta", owner: "Олена", status: "done", module: "Accounting" }
+      { name: "Яблуко Голден", category: "fruits", type: "Солодке", stock: "132 кг" },
+      { name: "Яблуко Гренні Сміт", category: "fruits", type: "Кисло-солодке", stock: "87 кг" },
+      { name: "Груша Конференція", category: "fruits", type: "Соковита", stock: "64 кг" },
+      { name: "Груша Вільямс", category: "fruits", type: "Ароматна", stock: "41 кг" },
+      { name: "Помідор сливка", category: "vegetables", type: "Тепличний", stock: "95 кг" },
+      { name: "Огірок короткоплідний", category: "vegetables", type: "Хрусткий", stock: "73 кг" },
+      { name: "Морква молода", category: "vegetables", type: "Коренеплід", stock: "110 кг" },
+      { name: "Полуниця свіжа", category: "berries", type: "Сезонна", stock: "38 кг" }
     ];
 
-    const statusLabel = {
-      done: "Done",
-      progress: "In Progress",
-      todo: "To Do"
+    const categoryLabel = {
+      fruits: "Фрукти",
+      vegetables: "Овочі",
+      berries: "Ягоди"
     };
 
     const listEl = document.getElementById("list");
@@ -266,14 +268,14 @@
     function render() {
       const query = searchEl.value.trim().toLowerCase();
       const filtered = records.filter((r) => {
-        const matchesFilter = activeFilter === "all" || r.status === activeFilter;
-        const haystack = `${r.name} ${r.owner} ${r.module} ${statusLabel[r.status]}`.toLowerCase();
+        const matchesFilter = activeFilter === "all" || r.category === activeFilter;
+        const haystack = `${r.name} ${r.type} ${r.stock} ${categoryLabel[r.category]}`.toLowerCase();
         const matchesQuery = !query || haystack.includes(query);
         return matchesFilter && matchesQuery;
       });
 
       listEl.innerHTML = "";
-      counterEl.textContent = `Записів: ${filtered.length}`;
+      counterEl.textContent = `Товарів: ${filtered.length}`;
       emptyEl.hidden = filtered.length > 0;
 
       for (const item of filtered) {
@@ -283,10 +285,10 @@
           <div>
             <div class="name">${highlight(item.name, query)}</div>
             <div class="meta">
-              Модуль: ${highlight(item.module, query)} · Відповідальний: ${highlight(item.owner, query)}
+              Категорія: ${highlight(categoryLabel[item.category], query)} · Тип: ${highlight(item.type, query)} · Залишок: ${highlight(item.stock, query)}
             </div>
           </div>
-          <span class="status ${item.status}">${statusLabel[item.status]}</span>
+          <span class="status ${item.category}">${categoryLabel[item.category]}</span>
         `;
         listEl.appendChild(li);
       }
